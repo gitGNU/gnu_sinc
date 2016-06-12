@@ -1,0 +1,72 @@
+#
+# ideas.txt
+#
+# Copyright (C) 2016 frnmst (Franco Masotti) <franco.masotti@student.unife.it>
+#
+# This file is part of SINC.
+#
+# SINC is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# SINC is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with SINC.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+A file with some ideas, TODO lists and feasability concepts for this project.
+
+====
+
+git options must use the git config utility and not write directly on the
+configuration files.
+
+If notification_time > 0 then notifications are enabled and they last the
+specified amount of time. If notification_time <= 0 then notifications are
+disabled.
+
+Options
+Trickle options ?
+Backups to keep ?
+Time to wait on problem ?
+
+Maybe local mountpoint is better if it's calculated runtime like this:
+local_mountpoint=$(printf "$USER:$user@$server:$port:$remote_directory" |
+$ sha1sum | awk ' { print $1 } '; ""$HOME"/.config/sinc/.$hashed_value
+
+Multiple server support.
+client:server:localDirs(per single client):remoteDirs
+ 1:1:1:1 ; Simple
+ n:1:1:1 ; Simple
+ n:1:m:m ; local and remote dirs are 1:1 (associated)
+ n:n:m:m ; Multiple client, same server (see previous condition also)
+
+Set an appropiate IFS to do the following
+$ while read line; do eval "git config "$line""; done <<< $var
+
+Use password box when required.
+
+SSHFS possible final command:
+$ sshfs -C -p $port -o reconnect -o sshfs_sync -o no_readahead -o sync_readdir 
+-o cache=no -o workaround=all $user@$server:$remote_directory $local_directory 
+-o idmap=user -o sync_read
+
+Since SSHFS is based on fuse we can't do inotifywait on the local mountpoint to 
+scan for remote changes. It does not work...
+
+# Create a fifo file locally
+$ mkfifo thisfifo
+# Assign a file descriptor to it to have asyncronous reads.
+# $ exec 3<> thisfifo
+# Watch remote directory and store inotify results in the fifo.
+$ ssh $user@$server "inotifywait -m $remote_dir" > thisfifo #&>3
+# Local loop.
+$ while true; do
+    inotifywait thisfifo
+    <exec_sync_command>
+done
